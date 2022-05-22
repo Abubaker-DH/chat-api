@@ -1,7 +1,9 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const { Conversation } = require("../models/conversation");
+const { Message } = require("../models/message");
 const auth = require("../middleware/auth");
-const admin = require("../middleware/admin");
+// const admin = require("../middleware/admin");
 const validateObjectId = require("../middleware/validateObjectId");
 const router = express.Router();
 
@@ -35,16 +37,36 @@ router.get("/:receiveId", [auth, validateObjectId], async (req, res) => {
   res.status(200).json(conversation);
 });
 
-// INFO: Delete one conversation
+// INFO: Delete one conversation with all messages
 router.delete("/:id", [auth, validateObjectId], async (req, res) => {
-  const conversation = await Conversation.findByIdAndRemove({
+  let conversation = await Conversation.findById({
     _id: id,
+    members: { $in: [req.user._id] },
   });
 
   if (!conversation)
     return res
       .status(404)
       .send("The conversation with given ID was not found.");
+
+  // INFO: use transaction to delete multiple doc
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    conversation = await Conversation.findByIdAndRemove(req.params.id, {
+      session,
+    });
+
+    await Message.deleteMany({ conversationId: req.params.id }, { session });
+
+    await session.commitTransaction();
+    return res.send(conversation);
+  } catch (error) {
+    console.log("error deleting conversation", error);
+    await session.abortTransaction();
+  } finally {
+    await session.endSession();
+  }
 
   res.status(200).json(conversation);
 });
