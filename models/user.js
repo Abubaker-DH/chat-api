@@ -49,24 +49,10 @@ function validateLogin(user) {
   return schema.validate(user);
 }
 
-function validateReset(user) {
-  const schema = Joi.object({
-    password: Joi.string().required().min(5).max(255),
-  });
-  return schema.validate(user);
-}
-
-function validateForgote(user) {
-  const schema = Joi.object({
-    email: Joi.string().required().email(),
-  });
-  return schema.validate(user);
-}
-
 userSchema.methods.generateAuthToken = function () {
   const token = jwt.sign(
     { _id: this._id, email: this.email, isAdmin: this.isAdmin },
-    config.get("jwtPrivateKey"),
+    process.env.JWT_PRIVET_KEY,
     { expiresIn: process.env.JWT_EXPIRE }
   );
   return token;
@@ -80,5 +66,3 @@ module.exports.User = mongoose.model("User", userSchema);
 exports.userSchema = userSchema;
 module.exports.validateRegister = validateRegister;
 module.exports.validateLogin = validateLogin;
-module.exports.validateReset = validateReset;
-module.exports.validateForgote = validateForgote;
