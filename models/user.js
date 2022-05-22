@@ -27,9 +27,6 @@ const userSchema = new Schema(
     },
     imageUrl: { type: String },
     isAdmin: { type: Boolean, default: false },
-    resetToken: String,
-    resetTokenExpiration: Date,
-    is_active: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

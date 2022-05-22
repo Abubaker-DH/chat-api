@@ -5,23 +5,30 @@ const Schema = mongoose.Schema;
 
 const messageSchema = new Schema(
   {
-    messageLine: {
-      type: String,
-      maxlength: 255,
+    conversationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Conversation",
     },
-    imageUrl: {
+    sender: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    text: {
       type: String,
     },
-    userId: { type: Schema.Types.ObjectId, ref: "User" },
-    roomId: { type: Schema.Types.ObjectId, ref: "Room" },
+    image: {
+      type: String,
+    },
   },
   { timestamps: true }
 );
 
 function validateMessage(message) {
   const schema = Joi.object({
-    messageLine: Joi.string().max(255),
-    imageUrl: Joi.string(),
+    text: Joi.string().max(255),
+    image: Joi.string(),
+    conversationId: Joi.string().required(),
+    sender: Joi.string().required(),
   });
   return schema.validate(message);
 }
