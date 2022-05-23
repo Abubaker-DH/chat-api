@@ -1,6 +1,6 @@
 require("dotenv").config();
 const path = require("path");
-const winston = require("winston");
+// const winston = require("winston");
 const swaggerUI = require("swagger-ui-express");
 const YAML = require("yamljs");
 const helmet = require("helmet");
@@ -34,7 +34,7 @@ app.use(
 );
 
 // INFO: Swagger
-const swaggerDocument = YAML.load("./swagger.yaml");
+// const swaggerDocument = YAML.load("./swagger.yaml");
 
 //  INFO: production packages
 app.use(cors());
@@ -74,9 +74,7 @@ const fileFilter = (req, file, cb) => {
 };
 
 app.use(
-  multer({ storage: fileStorage, fileFilter: fileFilter }).single(
-    "profileImage"
-  )
+  multer({ storage: fileStorage, fileFilter: fileFilter }).single("image")
 );
 app.use("/images", express.static(path.join(__dirname, "images")));
 

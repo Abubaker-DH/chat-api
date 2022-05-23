@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const config = require("config");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const Joi = require("joi");
@@ -36,7 +35,7 @@ function validateRegister(user) {
     name: Joi.string().required().min(2).max(10),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(5).max(255),
-    imageUrl: Joi.String(),
+    imageUrl: Joi.string(),
   });
   return schema.validate(user);
 }
@@ -52,8 +51,7 @@ function validateLogin(user) {
 userSchema.methods.generateAuthToken = function () {
   const token = jwt.sign(
     { _id: this._id, email: this.email, isAdmin: this.isAdmin },
-    process.env.JWT_PRIVET_KEY,
-    { expiresIn: process.env.JWT_EXPIRE }
+    process.env.JWT_PRIVET_KEY
   );
   return token;
 };

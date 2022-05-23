@@ -1,14 +1,24 @@
+// const admin = require("../middleware/admin");
 const fs = require("fs");
 const path = require("path");
 const express = require("express");
-const { Message, validateMessage } = require("../models/message");
 const auth = require("../middleware/auth");
-// const admin = require("../middleware/admin");
+const { Conversation } = require("../models/conversation");
+const { Message, validateMessage } = require("../models/message");
 const validateObjectId = require("../middleware/validateObjectId");
 const router = express.Router();
 
 // INFO: Get all conversation messages
 router.get("/:conversationId", auth, async (req, res) => {
+  const conversation = await Conversation.findById({
+    _id: req.params.conversationId,
+  });
+
+  if (!conversation)
+    return res
+      .status(404)
+      .send("The conversation with given ID was not found.");
+
   const messages = await Message.find({
     conversationId: req.params.conversationId,
   });
@@ -31,20 +41,41 @@ router.post("/", auth, async (req, res) => {
     image: req.body.image,
   });
 
-  const savedMessage = await newMessage.save();
-  res.status(201).json(savedMessage);
+  const message = await newMessage.save();
+  res.status(201).json(message);
 });
 
-// INFO: Delete one conversation message
-router.delete("/:id", auth, async (req, res) => {
-  const message = await Message.findByIdAndRemove({
+// INFO: Delete one message from a conversation
+router.delete("/:id", [auth, validateObjectId], async (req, res) => {
+  const message = await Message.findById({
     _id: req.params.id,
   });
 
   if (!message)
     return res.status(404).send("The message with given ID was not found.");
 
+  // NOTE: Only the owner can delete the message
+  if (message.sender !== req.user._id) {
+    return res.status(403).send("Method not allowed.");
+  }
+
+  await Message.findByIdAndRemove({
+    _id: req.params.id,
+  });
+
+  if (message.image) {
+    clearImage(message.image);
+  }
+
   res.status(200).json(message);
 });
+
+// NOTE: delete image from images Folder
+const clearImage = (filePath) => {
+  filePath = path.join(__dirname, "..", filePath);
+  fs.unlink(filePath, (err) => {
+    return err;
+  });
+};
 
 module.exports = router;

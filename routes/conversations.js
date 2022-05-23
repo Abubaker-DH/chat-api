@@ -1,10 +1,10 @@
+// const admin = require("../middleware/admin");
 const express = require("express");
 const mongoose = require("mongoose");
+const validateObjectId = require("../middleware/validateObjectId");
 const { Conversation } = require("../models/conversation");
 const { Message } = require("../models/message");
 const auth = require("../middleware/auth");
-// const admin = require("../middleware/admin");
-const validateObjectId = require("../middleware/validateObjectId");
 const router = express.Router();
 
 // INFO: New conversation route
@@ -26,7 +26,7 @@ router.get("/", auth, async (req, res) => {
 });
 
 // INFO: Get one conversation
-router.get("/:receiveId", [auth, validateObjectId], async (req, res) => {
+router.get("/:receiverId", auth, async (req, res) => {
   const conversation = await Conversation.findOne({
     members: { $all: [req.user._id, req.params.receiverId] },
   });
@@ -40,8 +40,7 @@ router.get("/:receiveId", [auth, validateObjectId], async (req, res) => {
 // INFO: Delete one conversation with all messages
 router.delete("/:id", [auth, validateObjectId], async (req, res) => {
   let conversation = await Conversation.findById({
-    _id: id,
-    members: { $in: [req.user._id] },
+    _id: req.params.id,
   });
 
   if (!conversation)
