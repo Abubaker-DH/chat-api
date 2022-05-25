@@ -5,9 +5,13 @@ const Schema = mongoose.Schema;
 
 const ConversationSchema = new Schema(
   {
-    members: {
-      type: Array,
-    },
+    members: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    // room: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

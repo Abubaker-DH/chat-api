@@ -19,19 +19,23 @@ router.post("/", auth, async (req, res) => {
   if (conversation)
     return res.status(400).send("The conversation already exist.");
 
+  if (req.user._id === req.body.receiverId)
+    return res.status(400).send("Bad request User not avilable .");
+
   const newConversation = new Conversation({
     members: [req.user._id, req.body.receiverId],
-  }).populate("members", "-isAdmin, -password");
+  });
 
   const savedConversation = await newConversation.save();
   // get the receiver socket id
-  const user = conUsers.find((u) => u.userId == req.body.receiverId);
+  const receiver = conUsers.find((u) => u.userId == req.body.receiverId);
 
   // NOTE: send to client
-  io.getIO().to(user.socketId).emit("conversation", {
-    action: "create",
-    conversation: savedConversation,
-  });
+  if (receiver)
+    io.getIO().to(receiver.socketId).emit("conversation", {
+      action: "create",
+      conversation: savedConversation,
+    });
   res.status(201).json(savedConversation);
 });
 
@@ -39,17 +43,18 @@ router.post("/", auth, async (req, res) => {
 router.get("/", auth, async (req, res) => {
   const conversations = await Conversation.find({
     members: { $in: [req.user._id] },
-  });
+  }).populate("members", "-isAdmin -password");
 
   let friends = [];
   let connectedFriends = [];
   // INFO: get my all recevierId conversations
-  for (c in conversations) {
-    friends.push(c.members.find((m) => m !== req.user._id));
+  for (let c of conversations) {
+    const f = c.members.find((m) => m._id !== req.user._id);
+    friends.push(f._id);
   }
 
   // INFO: get the connected friends
-  for (f in friends) {
+  for (let f of friends) {
     connectedFriends.push(conUsers.find((u) => u.userId == f));
   }
 
@@ -57,11 +62,12 @@ router.get("/", auth, async (req, res) => {
   const user = conUsers.find((u) => u.userId == req.user._id);
 
   // NOTE: send to me so i ge updated conversation
-  io.getIO().to(user.socketId).emit("conversation", {
-    action: "getAll",
-    conversations: conversations,
-    connectedFriends: connectedFriends,
-  });
+  if (user)
+    io.getIO().to(user.socketId).emit("conversation", {
+      action: "getAll",
+      conversations: conversations,
+      connectedFriends: connectedFriends,
+    });
 
   res.status(200).json(conversations);
 });
@@ -114,13 +120,14 @@ router.delete("/:id", [auth, validateObjectId], async (req, res) => {
   // get the receiver id
   const receiverId = conversation.members.find((m) => m !== req.user._id);
   // get the socket id
-  const recevier = conUsers.find((u) => u.id === receiverId);
+  const receiver = conUsers.find((u) => u.id === receiverId);
 
   // NOTE: send to client
-  io.getIO().to(recevier.socketId).emit("conversation", {
-    action: "delete",
-    conversation: conversation,
-  });
+  if (receiver)
+    io.getIO().to(receiver.socketId).emit("conversation", {
+      action: "delete",
+      conversation: conversation,
+    });
 
   res.status(200).json(conversation);
 });

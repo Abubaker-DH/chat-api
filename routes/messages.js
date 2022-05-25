@@ -30,14 +30,15 @@ router.get("/:conversationId", auth, async (req, res) => {
   }).populate("sender", "-password, -isAdmin");
 
   // get the receiver id
-  const receiverId = conversation.members.find((m) => m !== req.user._id);
+  const receiverId = conversation.members.find((m) => m._id !== req.user._id);
   // get the socket id
-  const recevier = conUsers.find((u) => u.id === receiverId);
+  const receiver = conUsers.find((u) => u.id === receiverId);
 
   // NOTE: send all messages to all client
-  io.getIO()
-    .to(recevier.socketId)
-    .emit("message", { action: "getMessages", message: messages });
+  if (receiver)
+    io.getIO()
+      .to(receiver.socketId)
+      .emit("message", { action: "getMessages", message: messages });
 
   res.status(200).json(messages);
 });
@@ -72,12 +73,14 @@ router.post("/", auth, async (req, res) => {
   // get the receiver id
   const receiverId = conversation.members.find((m) => m !== req.user._id);
   // get the socket id
-  const recevier = conUsers.find((u) => u.id === receiverId);
+  const receiver = conUsers.find((u) => u.id === receiverId);
 
   // NOTE: send message to all client
-  io.getIO()
-    .to(receiver.socketId)
-    .emit("message", { action: "createamessage", message: message });
+  if (receiver)
+    io.getIO()
+      .to(receiver.socketId)
+      .emit("message", { action: "createamessage", message: message });
+
   res.status(201).json(message);
 });
 
@@ -110,12 +113,13 @@ router.delete("/:id", [auth, validateObjectId], async (req, res) => {
   // get the receiver id
   const receiverId = conversation.members.find((m) => m !== req.user._id);
   // get the socket id
-  const recevier = conUsers.find((u) => u.id === receiverId);
+  const receiver = conUsers.find((u) => u.id === receiverId);
 
   // NOTE:
-  io.getIO()
-    .to(recevier.socketId)
-    .emit("message", { action: "deleteMessage", message: message });
+  if (receiver)
+    io.getIO()
+      .to(receiver.socketId)
+      .emit("message", { action: "deleteMessage", message: message });
 
   res.status(200).json(message);
 });
