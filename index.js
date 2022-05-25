@@ -1,6 +1,7 @@
 require("dotenv").config();
 const path = require("path");
 // const winston = require("winston");
+const ioFunc = require("./socket");
 const swaggerUI = require("swagger-ui-express");
 const YAML = require("yamljs");
 const helmet = require("helmet");
@@ -95,12 +96,38 @@ app.use(error);
 const MONGO_URL = process.env.MONGO_URI;
 const PORT = process.env.PORT || 5000;
 
+let connectedUsers = ioFunc.getUsers();
 mongoose
   .connect(MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useNewUrlParser: true,
   })
-  .then(() =>
-    app.listen(PORT, () => console.log(`server running on port ${PORT} ...`))
-  );
+  .then(() => {
+    const server = app.listen(PORT, () =>
+      console.log(`server running on port ${PORT} ...`)
+    );
+    const io = require("./socket").init(server);
+
+    // INFO: when connect
+    io.on("connection", (socket) => {
+      console.log("client connected");
+      // NOTE: get user from client
+      socket.on("addUser", (userId) => {
+        ioFunc.saveUser(userId, socket.id);
+      });
+
+      // NOTE: send users array to client
+      io.emit("getUsers", connectedUsers);
+
+      // INFO: When disconnect
+      socket.on("disconnect", () => {
+        console.log("client disconnected");
+        // connectedUsers.filter((user) => user.socketId !== socket.id);
+        ioFunc.removeUser(socket.id);
+
+        // NOTE: send users array to client
+        io.emit("getUsers", connectedUsers);
+      });
+    });
+  });

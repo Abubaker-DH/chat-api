@@ -5,24 +5,65 @@ const validateObjectId = require("../middleware/validateObjectId");
 const { Conversation } = require("../models/conversation");
 const { Message } = require("../models/message");
 const auth = require("../middleware/auth");
+const io = require("../socket");
 const router = express.Router();
+
+const conUsers = io.getUsers();
 
 // INFO: New conversation route
 router.post("/", auth, async (req, res) => {
-  const newConversation = new Conversation({
-    members: [req.user._id, req.body.receiverId],
+  const conversation = await Conversation.findOne({
+    members: { $all: [req.user._id, req.body.receiverId] },
   });
 
+  if (conversation)
+    return res.status(400).send("The conversation already exist.");
+
+  const newConversation = new Conversation({
+    members: [req.user._id, req.body.receiverId],
+  }).populate("members", "-isAdmin, -password");
+
   const savedConversation = await newConversation.save();
+  // get the receiver socket id
+  const user = conUsers.find((u) => u.userId == req.body.receiverId);
+
+  // NOTE: send to client
+  io.getIO().to(user.socketId).emit("conversation", {
+    action: "create",
+    conversation: savedConversation,
+  });
   res.status(201).json(savedConversation);
 });
 
 //  INFO: Get all user conversations
 router.get("/", auth, async (req, res) => {
-  const conversation = await Conversation.find({
+  const conversations = await Conversation.find({
     members: { $in: [req.user._id] },
   });
-  res.status(200).json(conversation);
+
+  let friends = [];
+  let connectedFriends = [];
+  // INFO: get my all recevierId conversations
+  for (c in conversations) {
+    friends.push(c.members.find((m) => m !== req.user._id));
+  }
+
+  // INFO: get the connected friends
+  for (f in friends) {
+    connectedFriends.push(conUsers.find((u) => u.userId == f));
+  }
+
+  // INFO: get the my socket id
+  const user = conUsers.find((u) => u.userId == req.user._id);
+
+  // NOTE: send to me so i ge updated conversation
+  io.getIO().to(user.socketId).emit("conversation", {
+    action: "getAll",
+    conversations: conversations,
+    connectedFriends: connectedFriends,
+  });
+
+  res.status(200).json(conversations);
 });
 
 // INFO: Get one conversation
@@ -48,6 +89,9 @@ router.delete("/:id", [auth, validateObjectId], async (req, res) => {
       .status(404)
       .send("The conversation with given ID was not found.");
 
+  if (!conversation.members.includes(req.user._id))
+    return res.status(403).send("Unauthrized to delete this conversation .");
+
   // INFO: use transaction to delete multiple doc
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -66,6 +110,17 @@ router.delete("/:id", [auth, validateObjectId], async (req, res) => {
   } finally {
     await session.endSession();
   }
+
+  // get the receiver id
+  const receiverId = conversation.members.find((m) => m !== req.user._id);
+  // get the socket id
+  const recevier = conUsers.find((u) => u.id === receiverId);
+
+  // NOTE: send to client
+  io.getIO().to(recevier.socketId).emit("conversation", {
+    action: "delete",
+    conversation: conversation,
+  });
 
   res.status(200).json(conversation);
 });

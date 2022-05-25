@@ -8,8 +8,12 @@ const validateObjectId = require("../middleware/validateObjectId");
 const router = express.Router();
 
 // NOTE:  Get all users
-router.get("/", [auth, admin], async (req, res) => {
-  const user = await User.find();
+router.get("/search", auth, async (req, res) => {
+  let q = req.query.name;
+  const user = await User.find({ name: { $regex: q, $options: "i" } }).select(
+    "-isAdmin -password"
+  );
+
   res.send(user);
 });
 

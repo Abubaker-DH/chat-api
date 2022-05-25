@@ -6,7 +6,10 @@ const auth = require("../middleware/auth");
 const { Conversation } = require("../models/conversation");
 const { Message, validateMessage } = require("../models/message");
 const validateObjectId = require("../middleware/validateObjectId");
+const io = require("../socket");
 const router = express.Router();
+
+const conUsers = io.getUsers();
 
 // INFO: Get all conversation messages
 router.get("/:conversationId", auth, async (req, res) => {
@@ -19,9 +22,23 @@ router.get("/:conversationId", auth, async (req, res) => {
       .status(404)
       .send("The conversation with given ID was not found.");
 
+  if (!conversation.members.includes(req.user._id))
+    return res.status(403).send("Unauthrized to get conversation messages.");
+
   const messages = await Message.find({
     conversationId: req.params.conversationId,
-  });
+  }).populate("sender", "-password, -isAdmin");
+
+  // get the receiver id
+  const receiverId = conversation.members.find((m) => m !== req.user._id);
+  // get the socket id
+  const recevier = conUsers.find((u) => u.id === receiverId);
+
+  // NOTE: send all messages to all client
+  io.getIO()
+    .to(recevier.socketId)
+    .emit("message", { action: "getMessages", message: messages });
+
   res.status(200).json(messages);
 });
 
@@ -34,6 +51,15 @@ router.post("/", auth, async (req, res) => {
   const { error } = validateMessage(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
+  const conversation = await Conversation.findById({
+    _id: req.body.conversationId,
+  });
+
+  if (!conversation)
+    return res
+      .status(404)
+      .send("The conversation with given ID was not found.");
+
   const newMessage = new Message({
     conversationId: req.body.conversationId,
     sender: req.body.sender,
@@ -42,6 +68,16 @@ router.post("/", auth, async (req, res) => {
   });
 
   const message = await newMessage.save();
+
+  // get the receiver id
+  const receiverId = conversation.members.find((m) => m !== req.user._id);
+  // get the socket id
+  const recevier = conUsers.find((u) => u.id === receiverId);
+
+  // NOTE: send message to all client
+  io.getIO()
+    .to(receiver.socketId)
+    .emit("message", { action: "createamessage", message: message });
   res.status(201).json(message);
 });
 
@@ -59,6 +95,10 @@ router.delete("/:id", [auth, validateObjectId], async (req, res) => {
     return res.status(403).send("Method not allowed.");
   }
 
+  const conversation = await Conversation.findById({
+    _id: message.conversationId,
+  });
+
   await Message.findByIdAndRemove({
     _id: req.params.id,
   });
@@ -66,6 +106,16 @@ router.delete("/:id", [auth, validateObjectId], async (req, res) => {
   if (message.image) {
     clearImage(message.image);
   }
+
+  // get the receiver id
+  const receiverId = conversation.members.find((m) => m !== req.user._id);
+  // get the socket id
+  const recevier = conUsers.find((u) => u.id === receiverId);
+
+  // NOTE:
+  io.getIO()
+    .to(recevier.socketId)
+    .emit("message", { action: "deleteMessage", message: message });
 
   res.status(200).json(message);
 });
