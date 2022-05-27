@@ -35,7 +35,7 @@ app.use(
 );
 
 // INFO: Swagger
-// const swaggerDocument = YAML.load("./swagger.yaml");
+const swaggerDocument = YAML.load("./swagger.yaml");
 
 //  INFO: production packages
 app.use(cors());
@@ -82,11 +82,7 @@ app.use("/images", express.static(path.join(__dirname, "images")));
 // INFO: logging error middleware
 require("./middleware/log")();
 
-// INFO: api routes
-app.get("/", (req, res) => {
-  res.send('<h1>Chat Api<h1><a href="/api-docs">Documentation</a>');
-});
-// app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 app.use("/api/v1/users", users);
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/conversations", conversations);
@@ -118,7 +114,7 @@ mongoose
       });
 
       // NOTE: send users array to client
-      io.emit("getUsers", connectedUsers);
+      // io.emit("getUsers", connectedUsers);
 
       // INFO: When disconnect
       socket.on("disconnect", () => {
@@ -127,7 +123,7 @@ mongoose
         ioFunc.removeUser(socket.id);
 
         // NOTE: send users array to client
-        io.emit("getUsers", connectedUsers);
+        // io.emit("getUsers", connectedUsers);
       });
     });
   });

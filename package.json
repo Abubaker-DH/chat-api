@@ -30,5 +30,9 @@
     "winston": "^3.7.2",
     "xss-clean": "^0.1.1",
     "yamljs": "^0.3.0"
+  },
+  "engines": {
+    "node": "14.x"
   }
+
 }
