@@ -64,7 +64,7 @@ paths:
         - name: name
           in: query
           description: ""
-          required: false
+          required: true
           style: form
           explode: true
           schema:
