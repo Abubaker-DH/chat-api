@@ -1,0 +1,433 @@
+openapi: 3.0.0
+info:
+  title: Chat Api
+  contact: {}
+  version: "1.0"
+servers:
+  - url: https://chat-api-06.herokuapp.com/api/v1/
+    variables: {}
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login
+      operationId: Login
+      parameters: []
+      requestBody:
+        description: ""
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+            example:
+              email: abubaker@hotmail.com
+              password: bubaker123
+        required: true
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+      security: []
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register User
+      operationId: RegisterUser
+      parameters: []
+      requestBody:
+        description: ""
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterUserRequest"
+            example:
+              name: adam
+              email: adam@gmail.com
+              password: adam123
+        required: true
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+      security: []
+  /users/search:
+    get:
+      tags:
+        - Users
+      summary: Search for user
+      operationId: Searchforuser
+      parameters:
+        - name: name
+          in: query
+          description: ""
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: string
+            example: O
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get one User
+      operationId: GetoneUser
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+        - name: id
+          in: path
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+    patch:
+      tags:
+        - Users
+      summary: Update User
+      operationId: UpdateUser
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+        - name: id
+          in: path
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            encoding: {}
+            schema:
+              required:
+                - imageUrl
+                - isAdmin
+              type: object
+              properties:
+                imageUrl:
+                  type: string
+                isAdmin:
+                  type: string
+        required: false
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+    delete:
+      tags:
+        - Users
+      summary: Delete User
+      operationId: DeleteUser
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+        - name: id
+          in: path
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+  /conversations:
+    post:
+      tags:
+        - Conversation
+      summary: New conversations
+      operationId: Newconversations
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+      requestBody:
+        description: ""
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewconversationsRequest"
+            example:
+              receiverId: 628abc349b34981adcf74520
+        required: true
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+    get:
+      tags:
+        - Conversation
+      summary: Get all conversations
+      operationId: Getallconversations
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+  /conversations/{id}:
+    get:
+      tags:
+        - Conversation
+      summary: Get one conversation
+      operationId: Getoneconversation
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+        - name: id
+          in: path
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+    delete:
+      tags:
+        - Conversation
+      summary: delete conversations
+      operationId: deleteconversations
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+        - name: id
+          in: path
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+  /messages/{id}:
+    get:
+      tags:
+        - Messages
+      summary: Get conversation messages
+      operationId: Getconversationmessages
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+        - name: id
+          in: path
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+    delete:
+      tags:
+        - Messages
+      summary: Delete message
+      operationId: Deletemessage
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+        - name: id
+          in: path
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+  /messages:
+    post:
+      tags:
+        - Messages
+      summary: Send new message
+      operationId: Sendnewmessage
+      parameters:
+        - name: x-auth-token
+          in: header
+          description: ""
+          required: true
+          style: simple
+          schema:
+            type: string
+            example:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            encoding: {}
+            schema:
+              required:
+                - conversationId
+                - text
+                - image
+              type: object
+              properties:
+                conversationId:
+                  type: string
+                  example: 628abdc4fed7e82d54ca8c04
+                text:
+                  type: string
+                  example: "hi "
+                image:
+                  type: string
+        required: false
+      responses:
+        "200":
+          description: ""
+          headers: {}
+      deprecated: false
+components:
+  schemas:
+    LoginRequest:
+      title: LoginRequest
+      required:
+        - email
+        - password
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      example:
+        email: abubaker@hotmail.com
+        password: bubaker123
+    RegisterUserRequest:
+      title: RegisterUserRequest
+      required:
+        - name
+        - email
+        - password
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      example:
+        name: adam
+        email: adam@gmail.com
+        password: adam123
+    NewconversationsRequest:
+      title: NewconversationsRequest
+      required:
+        - receiverId
+      type: object
+      properties:
+        receiverId:
+          type: string
+      example:
+        receiverId: 628abc349b34981adcf74520
+  securitySchemes:
+    auth-token:
+      type: apiKey
+      name: x-auth-token
+      in: header
+security:
+  - auth-token: []
+tags:
+  - name: Auth
+    description: "Routes"
+  - name: Users
+    description: "Routes"
+  - name: Conversation
+    description: "Routes"
+  - name: Messages
+    description: "Routes"
