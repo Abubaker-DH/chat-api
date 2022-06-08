@@ -1,6 +1,6 @@
 require("dotenv").config();
 const path = require("path");
-// const winston = require("winston");
+const winston = require("winston");
 const ioFunc = require("./socket");
 const swaggerUI = require("swagger-ui-express");
 const YAML = require("yamljs");
@@ -22,11 +22,10 @@ const auth = require("./routes/auth");
 const app = express();
 Joi.objectId = require("joi-objectid")(Joi);
 app.use(express.json());
-// dotenv.config();
 
 // INFO: if we behind a proxy
 app.set("trust proxy", 1);
-// INFO: use it to limit number of reqest
+// INFO: use it to limit number of request
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -37,7 +36,7 @@ app.use(
 // INFO: Swagger
 const swaggerDocument = YAML.load("./swagger.yaml");
 
-//  INFO: production packages
+//  INFO: production/security packages
 app.use(cors());
 app.use(xss());
 app.use(helmet());
@@ -101,7 +100,7 @@ mongoose
   })
   .then(() => {
     const server = app.listen(PORT, () =>
-      console.log(`server running on port ${PORT} ...`)
+      winston.info(`server running on port ${PORT} ...`)
     );
     const io = require("./socket").init(server);
 

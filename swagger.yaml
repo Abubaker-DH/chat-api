@@ -21,8 +21,8 @@ paths:
             schema:
               $ref: "#/components/schemas/LoginRequest"
             example:
-              email: abubaker@hotmail.com
-              password: bubaker123
+              email: abubaker@gmail.com
+              password: abubaker123
         required: true
       responses:
         "200":
@@ -353,8 +353,6 @@ paths:
             schema:
               required:
                 - conversationId
-                - text
-                - image
               type: object
               properties:
                 conversationId:

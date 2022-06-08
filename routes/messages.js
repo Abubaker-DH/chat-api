@@ -49,6 +49,9 @@ router.post("/", auth, async (req, res) => {
   if (req.file) {
     req.body.image = req.file.path;
   }
+  if (!req.body.image && !req.body.text) {
+    return res.status(400).send("You cann't send an empty message.");
+  }
   const { error } = validateMessage(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
