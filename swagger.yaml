@@ -362,7 +362,7 @@ paths:
                   type: string
                   example: "hi "
                 image:
-                  type: string
+                  type: file
         required: false
       responses:
         "200":
