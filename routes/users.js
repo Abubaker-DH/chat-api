@@ -10,11 +10,12 @@ const router = express.Router();
 // NOTE:  Get all users
 router.get("/search", auth, async (req, res) => {
   let q = req.query.name;
-  const user = await User.find({ name: { $regex: q, $options: "i" } }).select(
-    "-isAdmin -password"
-  );
-
-  res.send(user);
+  if (q) {
+    const user = await User.find({ name: { $regex: q, $options: "i" } }).select(
+      "-isAdmin -password"
+    );
+    res.send(user);
+  }
 });
 
 // NOTE:  Get one user by ID
